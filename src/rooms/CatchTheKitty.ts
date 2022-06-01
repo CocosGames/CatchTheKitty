@@ -121,13 +121,28 @@ export class CatchTheKitty extends Room<State> {
 
   checkWin (x: any, y: any, move: any) {
     let board = this.state.board;
-    return (x==0 || y==0 || x==BOARD_WIDTH-1 || y==BOARD_HEIGHT-1)
+    return (x==0 || y==0 || x==BOARD_WIDTH-1 || y==BOARD_HEIGHT-1);
   }
 
   checkLose (x: any, y: any, move: any) {
     let board = this.state.board;
+    return this.surrounded(x,y)==4;
+  }
 
-    return false
+  surrounded(x:number, y:number):number
+  {
+    let board = this.state.board;
+    let index = (BOARD_HEIGHT - y -1) * BOARD_WIDTH + x;
+    if (this.checkWin(x,y,0))
+      return 0;
+    if (board[index]==3)
+      return 1;
+    let prev = board[index];
+    let danger = 0;
+    board[index] = 3;
+      danger = this.surrounded(x-1,y)+this.surrounded(x,y-1)+this.surrounded(x+1,y)+this.surrounded(x,y+1)
+    board[index] = prev;
+    return danger;
   }
 
   onLeave (client: Client) {
