@@ -91,7 +91,15 @@ export class CatchTheKitty extends Room<State> {
         else if (x!=this.catx || y!=this.caty)
         {
           this.state.board[index] = 3;
-          this.state.currentTurn = playerIds[0];
+          if (this.checkLose(x, y, 1))
+          {
+            this.state.winner = client.sessionId;
+            console.log("winner: " + client.sessionId);
+          }
+          else
+          {
+            this.state.currentTurn = playerIds[0];
+          }
         }
 
       }
@@ -112,6 +120,11 @@ export class CatchTheKitty extends Room<State> {
   }
 
   checkWin (x: any, y: any, move: any) {
+    let board = this.state.board;
+    return (x==0 || y==0 || x==BOARD_WIDTH-1 || y==BOARD_HEIGHT-1)
+  }
+
+  checkLose (x: any, y: any, move: any) {
     let board = this.state.board;
 
     return false
