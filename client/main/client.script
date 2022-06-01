@@ -7,7 +7,7 @@ function init(self)
 
 	client = ColyseusClient.new("ws://localhost:2567")
 	--client = ColyseusClient.new("wss://u7gk7r.us-east-vin.colyseus.net:443")
-	client:join_or_create("wuzimu", {}, function(err, _room)
+	client:join_or_create("cat", {}, function(err, _room)
 		if err then
 			print("JOIN ERROR: " .. err)
 			return

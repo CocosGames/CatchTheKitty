@@ -3,6 +3,8 @@ local edge = 47				-- Left and right edge.
 local bottom_edge = 47		-- Bottom edge.
 local boardwidth = 19		-- Number of columns
 local boardheight = 19		-- Number of rows
+local catx = 10
+local caty = 10
 
 function init(self)
 	msg.post("#label", "disable")
@@ -12,6 +14,10 @@ end
 
 function setup_board(self)
 	self.board = {}
+	catx = (boardwidth-1)/2
+	caty = (boardheight-1)/2
+	local pos = vmath.vector3(blocksize*catx+edge,blocksize*caty+bottom_edge,0.1)
+	go.set_position(pos,"/cat")
 end
 
 function on_message(self, message_id, message, sender)
@@ -47,8 +53,9 @@ function on_input(self, action_id, action)
 		if x<0 or x>=boardwidth or y<0 or y>=boardheight then
 			return
 		end
+
 		local index = (boardheight - y -1) * boardwidth + x
-		if self.board[index] ~=1 and self.board[index]~=2 then
+		if self.board[index]~=3 then
 			msg.post("#client", "action", {index=index})
 		end
 	end
@@ -59,23 +66,22 @@ end
 -- (0,1) (1,1) (2,1)
 -- (0,0) (1,0) (2,0) ...
 --
--- value: empty=0 white=1 black=2
+-- value: empty=0 cat=1,2 block=3
 --
 function set_board(self, value, index)
-	local c;
-	if value==1 then
-		c = "white"
-	elseif value==2 then
-		c = "black"
-	else
-		return
-	end
 	local pos = vmath.vector3();
 	local x = index % boardwidth
 	local y = boardheight - math.floor(index / boardheight) -1
 	pos.x = blocksize*x+edge
 	pos.y = blocksize*y+bottom_edge
-	factory.create("#piece_factory", pos, null, {color =  hash(c)})
+
+	if value==1 or value==2 then
+		catx = x
+		caty = y
+		go.set_position(vmath.vector3(pos.x,pos.y,0.1),"/cat")
+	elseif value==3 then
+		factory.create("#piece_factory", pos, null, {color =  hash("black")})
+	end
 	self.board[index] = value
 end
 

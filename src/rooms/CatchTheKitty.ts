@@ -34,6 +34,8 @@ class State extends Schema {
 
 export class CatchTheKitty extends Room<State> {
   maxClients = 2;
+  catx = (BOARD_WIDTH-1)/2;
+  caty = (BOARD_HEIGHT-1)/2;
 
   onCreate () {
     this.setState(new State());
@@ -47,7 +49,7 @@ export class CatchTheKitty extends Room<State> {
     this.setSeatReservationTime(100000);
     this.state.players.set(client.sessionId, true);
     console.log(this.state.players.size + " players joined!");
-    if (this.state.players.size === 2) {
+    if (this.state.players.size === this.maxClients) {
       this.state.currentTurn = client.sessionId;
 
       // lock this room for new users
@@ -67,20 +69,29 @@ export class CatchTheKitty extends Room<State> {
       const x = index % BOARD_WIDTH;
       const y = BOARD_HEIGHT - Math.floor(index / BOARD_WIDTH) - 1;
 
-      if (this.state.board[index] === 0) {
-        const move = (client.sessionId === playerIds[0]) ? 1 : 2;
-        this.state.board[index] = move;
-
-        if (this.checkWin(x, y, move)) {
-          this.state.winner = client.sessionId;
-          console.log("winner: " + client.sessionId);
-        } else if (this.checkBoardComplete()) {
-          this.state.draw = true;
-
-        } else {
-          // switch turn
-          const otherPlayerSessionId = (client.sessionId === playerIds[0]) ? playerIds[1] : playerIds[0];
-          this.state.currentTurn = otherPlayerSessionId;
+      if (this.state.board[index] <=2) {
+        if (client.sessionId === playerIds[0])
+        {
+          if (Math.abs(this.catx-x)+Math.abs(this.caty-y)==1)
+          {
+            this.catx = x;
+            this.caty = y;
+            this.state.board[index] = this.state.board[index]==1?2:1;
+            if (this.checkWin(x, y, 0))
+            {
+              this.state.winner = client.sessionId;
+              console.log("winner: " + client.sessionId);
+            }
+            else
+            {
+              this.state.currentTurn = playerIds[1];
+            }
+          }
+        }
+        else if (x!=this.catx || y!=this.caty)
+        {
+          this.state.board[index] = 3;
+          this.state.currentTurn = playerIds[0];
         }
 
       }
@@ -92,7 +103,7 @@ export class CatchTheKitty extends Room<State> {
 // (0,1) (1,1) (2,1)
 // (0,0) (1,0) (2,0) ...
 //
-// value: empty=0 white=1 black=2
+// value: empty=0 passed=1,2 block=3
 //
   checkBoardComplete () {
     return this.state.board
@@ -102,118 +113,8 @@ export class CatchTheKitty extends Room<State> {
 
   checkWin (x: any, y: any, move: any) {
     let board = this.state.board;
-    let i = 1;
-    let link = 1;
 
-    // horizontal
-    // left
-    while (x-i>=0)
-    {
-      if (board[(BOARD_HEIGHT - y -1) * BOARD_WIDTH + x - i]==move)
-      {
-        link++;
-        i++;
-        continue;
-      }
-      break;
-    }
-    // right
-    i=1;
-    while (x+i<BOARD_WIDTH)
-    {
-      if (board[(BOARD_HEIGHT - y -1) * BOARD_WIDTH + x + i]==move)
-      {
-        link++;
-        i++;
-        continue;
-      }
-      break;
-    }
-    if (link>=5)
-      return true;
-
-    // vertical
-    // up
-    i = 1;
-    link = 1;
-    while (y+i<BOARD_HEIGHT)
-    {
-      if (board[(BOARD_HEIGHT - y - 1 + i) * BOARD_WIDTH + x]==move)
-      {
-        link++;
-        i++;
-        continue;
-      }
-      break;
-    }
-    //down
-    i = 1;
-    while (y-i>=0)
-    {
-      if (board[(BOARD_HEIGHT - y - 1 - i) * BOARD_WIDTH + x]==move)
-      {
-        link++;
-        i++;
-        continue;
-      }
-      break;
-    }
-    if (link>=5)
-      return true;
-
-    // cross forward
-    // top left
-    link = 1;
-    i = 1;
-    while ((x-i>=0) && (y+i<BOARD_HEIGHT)) {
-      if (board[(BOARD_HEIGHT - y - 1 + i) * BOARD_WIDTH + x - i] == move)
-      {
-        link++;
-        i++;
-        continue;
-      }
-      break;
-    }
-    // bottom right
-    i = 1;
-    while ((x+i<BOARD_WIDTH) && (y-i>=0)) {
-      if (board[(BOARD_HEIGHT - y - 1 - i) * BOARD_WIDTH + x + i] == move)
-      {
-        link++;
-        i++;
-        continue;
-      }
-      break;
-    }
-    if (link>=5)
-      return true;
-    // cross backward
-    i = 1;
-    link = 1;
-    // top right
-    while ((x+i<BOARD_WIDTH) && (y+i<BOARD_HEIGHT)) {
-      if (board[(BOARD_HEIGHT - y - 1 + i) * BOARD_WIDTH + x + i] == move)
-      {
-        link++;
-        i++;
-        continue;
-      }
-      break;
-    }
-    // bottom left
-    i = 1;
-    while ((x-i>=0) && (y-i>=0)) {
-      if (board[(BOARD_HEIGHT - y - 1 - i) * BOARD_WIDTH + x - i] == move)
-      {
-        link++;
-        i++;
-        continue;
-      }
-      break;
-    }
-    if (link>=5)
-      return true;
-    return false;
+    return false
   }
 
   onLeave (client: Client) {
